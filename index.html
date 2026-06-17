@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gamer Store - Meus Anúncios</title>
+    <link rel="icon" href="fav.ico" type="image/x-icon">
+    
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,15 +17,20 @@
 
     <header class="fixed-header">
         <div class="logo">GAMER<span>ZONE</span></div>
-        <nav class="nav-links">
-            <a href="#blog"><i class="fa-solid fa-blog"></i> Blog</a>
-            <a href="#contato"><i class="fa-solid fa-envelope"></i> Contato</a>
-            <a href="#sobre"><i class="fa-solid fa-gamepad"></i> Sobre</a>
+        
+        <button id="menu-toggle-btn" class="menu-toggle-btn" onclick="toggleResponsiveMenu()">
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
+
+        <nav id="nav-links" class="nav-links">
+            <a href="#blog" onclick="closeResponsiveMenu()"><i class="fa-solid fa-blog"></i> Blog</a>
+            <a href="#contato" onclick="closeResponsiveMenu()"><i class="fa-solid fa-envelope"></i> Contato</a>
+            <a href="#sobre" onclick="closeResponsiveMenu()"><i class="fa-solid fa-gamepad"></i> Sobre</a>
             
-            <button id="btn-open-login" class="nav-admin-btn" onclick="toggleModal('login-modal')"><i class="fa-solid fa-lock"></i> Admin</button>
-            <button id="btn-open-panel" class="nav-admin-btn admin-only" onclick="toggleModal('product-modal')"><i class="fa-solid fa-plus"></i> Novo Item</button>
-            <button id="btn-open-dashboard" class="nav-admin-btn admin-only" onclick="toggleModal('dashboard-modal')"><i class="fa-solid fa-chart-simple"></i> Painel Geral</button>
-            <button id="btn-logout" class="nav-logout-btn admin-only" onclick="logoutAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+            <button id="btn-open-login" class="nav-admin-btn" onclick="toggleModal('login-modal'); closeResponsiveMenu();"><i class="fa-solid fa-lock"></i> Admin</button>
+            <button id="btn-open-panel" class="nav-admin-btn admin-only" onclick="toggleModal('product-modal'); closeResponsiveMenu();"><i class="fa-solid fa-plus"></i> Novo Item</button>
+            <button id="btn-open-dashboard" class="nav-admin-btn admin-only" onclick="toggleModal('dashboard-modal'); closeResponsiveMenu();"><i class="fa-solid fa-chart-simple"></i> Painel Geral</button>
+            <button id="btn-logout" class="nav-logout-btn admin-only" onclick="logoutAdmin(); closeResponsiveMenu();"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
         </nav>
     </header>
 
