@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kits OPL Workin'Store</title>
+    <title>Gamer Store - Meus Anúncios</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,22 +14,23 @@
 <body>
 
     <header class="fixed-header">
-        <div class="logo">Workin'<span>Store</span></div>
+        <div class="logo">GAMER<span>ZONE</span></div>
         <nav class="nav-links">
-            <a href="https://gamesworkin.blogspot.com" target="_blank"><i class="fa-solid fa-blog"></i> Nosso Blog</a>
-            <a href="https://api.whatsapp.com/send/?phone=5588988470190&text=Olá!+Estava+navegando+no+site+e+tenho+dúvidas+sobre+os+produtos.&type=phone_number&app_absent=0" target="_blank"><i class="fa-solid fa-envelope"></i> Contato</a>
-            <a href="https://gamesworkin.github.io/areadojogador" target="_blank"><i class="fa-solid fa-gamepad"></i> Área do Jogador</a>
+            <a href="#blog"><i class="fa-solid fa-blog"></i> Blog</a>
+            <a href="#contato"><i class="fa-solid fa-envelope"></i> Contato</a>
+            <a href="#sobre"><i class="fa-solid fa-gamepad"></i> Sobre</a>
             
-            <button id="btn-open-login" class="nav-admin-btn"><i class="fa-solid fa-lock"></i> Admin</button>
-            <button id="btn-open-panel" class="nav-admin-btn admin-only"><i class="fa-solid fa-plus"></i> Novo Item</button>
+            <button id="btn-open-login" class="nav-admin-btn" onclick="toggleModal('login-modal')"><i class="fa-solid fa-lock"></i> Admin</button>
+            <button id="btn-open-panel" class="nav-admin-btn admin-only" onclick="toggleModal('product-modal')"><i class="fa-solid fa-plus"></i> Novo Item</button>
+            <button id="btn-open-dashboard" class="nav-admin-btn admin-only" onclick="toggleModal('dashboard-modal')"><i class="fa-solid fa-chart-simple"></i> Painel Geral</button>
             <button id="btn-logout" class="nav-logout-btn admin-only" onclick="logoutAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
         </nav>
     </header>
 
     <main class="main-content">
         <div class="hero-banner">
-            <h1>TURBINE SEU PS2 AGORA!</h1>
-            <p>Ofertas exclusivas com super duscontos!</p>
+            <h1>UPGRADE SEU SETUP</h1>
+            <p>Ofertas exclusivas com gatilhos de tempo real</p>
         </div>
         
         <div id="products-grid" class="mosaic-grid">
@@ -40,21 +41,25 @@
         <div class="modal-card">
             <button class="close-modal" onclick="toggleModal('login-modal')">&times;</button>
             <h2><i class="fa-solid fa-shield-halved"></i> AUTENTICAÇÃO</h2>
-            <div class="input-group">
-                <input type="email" id="admin-email" placeholder="E-mail do Administrador" required>
+            <div id="login-form-container">
+                <div class="input-group">
+                    <input type="email" id="admin-email" placeholder="E-mail do Administrador" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="admin-password" placeholder="Senha de Acesso" required>
+                </div>
+                <button id="btn-submit-login" class="cyber-btn success" onclick="loginAdmin()">ENTRAR NO SISTEMA</button>
             </div>
-            <div class="input-group">
-                <input type="password" id="admin-password" placeholder="Senha de Acesso" required>
-            </div>
-            <button class="cyber-btn success" onclick="loginAdmin()">ENTRAR NO SISTEMA</button>
         </div>
     </div>
 
     <div id="product-modal" class="modal-overlay hidden">
         <div class="modal-card wide">
-            <button class="close-modal" onclick="toggleModal('product-modal')">&times;</button>
-            <h2><i class="fa-solid fa-square-plus"></i> CADASTRAR NOVO ANÚNCIO</h2>
+            <button class="close-modal" onclick="closeProductModal()">&times;</button>
+            <h2 id="modal-product-title"><i class="fa-solid fa-square-plus"></i> CADASTRAR NOVO ANÚNCIO</h2>
             <form id="product-form">
+                <input type="hidden" id="prod-id">
+                
                 <input type="text" id="prod-title" placeholder="Título do Produto (ex: Teclado Mecânico RGB)" required>
                 <input type="url" id="prod-img" placeholder="URL da Imagem do Produto" required>
                 <textarea id="prod-desc" placeholder="Descrição curta do item e especificações..." required></textarea>
@@ -71,12 +76,43 @@
                     </select>
                 </div>
 
-                <button type="submit" class="cyber-btn neon">PUBLICAR ANÚNCIO</button>
+                <button type="submit" id="btn-save-product" class="cyber-btn neon">PUBLICAR ANÚNCIO</button>
             </form>
         </div>
     </div>
 
-    <a href="https://wa.me/5588988470190?text=Olá! Estava navegando no site e tenho dúvidas sobre os produtos." class="whatsapp-float" target="_blank" rel="noopener noreferrer">
+    <div id="dashboard-modal" class="modal-overlay hidden">
+        <div class="modal-card extra-wide">
+            <button class="close-modal" onclick="toggleModal('dashboard-modal')">&times;</button>
+            <h2><i class="fa-solid fa-folder-gear"></i> SISTEMA DE GERENCIAMENTO GERAL</h2>
+            
+            <div class="dashboard-actions">
+                <button class="action-btn export" onclick="exportDataJSON()"><i class="fa-solid fa-file-export"></i> Exportar JSON</button>
+                <label class="action-btn import" for="import-file">
+                    <i class="fa-solid fa-file-import"></i> Importar JSON
+                </label>
+                <input type="file" id="import-file" accept=".json" onchange="importDataJSON(event)" style="display: none;">
+            </div>
+
+            <div class="table-container">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>Imagem</th>
+                            <th>Título</th>
+                            <th>Preço</th>
+                            <th>Gatilho</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/5500999999999?text=Olá! Estava navegando no site e tenho dúvidas sobre os produtos." class="whatsapp-float" target="_blank" rel="noopener noreferrer">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
