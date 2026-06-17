@@ -2,13 +2,13 @@
 
 // CONFIGURAÇÃO DO SEU FIREBASE (Substitua com suas credenciais oficiais do Firebase Console)
 const firebaseConfig = {
-    apiKey: "AIzaSyD5VJ5pdgBXRD3ODIsbhO9jJcOZ2MnR-3E",
-    authDomain: "kits-opl.firebaseapp.com",
-    databaseURL: "https://kits-opl-default-rtdb.firebaseio.com",
-    projectId: "kits-opl",
-    storageBucket: "kits-opl.firebasestorage.app",
-    messagingSenderId: "493713565781",
-    appId: "1:493713565781:web:f40dc124537e344bc80cdc"
+    apiKey: "SUA_API_KEY_AQUI",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SUA_APP_ID"
 };
 
 // Inicialização estável do Firebase
@@ -29,11 +29,38 @@ const TriggersMap = {
 let localProductsCache = {};
 
 // ========================================================
+// LÓGICA DO MENU RESPONSIVO (DROPDOWN INTELEGENTE)
+// ========================================================
+function toggleResponsiveMenu() {
+    const navLinks = document.getElementById('nav-links');
+    if(navLinks) navLinks.classList.toggle('active');
+}
+
+function closeResponsiveMenu() {
+    const navLinks = document.getElementById('nav-links');
+    if(navLinks) navLinks.classList.remove('active');
+}
+
+// Atualiza o ícone do botão hambúrguer dependendo do nível de acesso
+function updateMenuToggleButton(isAdmin) {
+    const toggleBtn = document.getElementById('menu-toggle-btn');
+    if (!toggleBtn) return;
+    
+    if (isAdmin) {
+        // Se for admin logado: Ícone de Engrenagem
+        toggleBtn.innerHTML = `<i class="fa-solid fa-gear"></i>`;
+    } else {
+        // Se for usuário normal: Ícone de Seta indicando expansão
+        toggleBtn.innerHTML = `<i class="fa-solid fa-chevron-down"></i>`;
+    }
+}
+
+// ========================================================
 // CAPTURA AUTOMÁTICA DO ENTER PARA LOGIN
 // ========================================================
 document.getElementById('login-modal').addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
-        event.preventDefault(); // Impede envios colaterais
+        event.preventDefault();
         loginAdmin();
     }
 });
@@ -49,20 +76,25 @@ function toggleModal(modalId) {
 
 function closeProductModal() {
     toggleModal('product-modal');
-    // Reseta o estado interno do formulário após fechar
     document.getElementById('product-form').reset();
     document.getElementById('prod-id').value = '';
     document.getElementById('modal-product-title').innerHTML = `<i class="fa-solid fa-square-plus"></i> CADASTRAR NOVO ANÚNCIO`;
     document.getElementById('btn-save-product').innerText = "PUBLICAR ANÚNCIO";
 }
 
-// Escuta a autenticação e reestrutura o DOM
+// ========================================================
+// VALIDAÇÃO EXCLUSIVA DE ADMIN (REQUISITO FUNDAMENTAL)
+// ========================================================
 auth.onAuthStateChanged((user) => {
-    if (user) {
+    // Só será considerado Administrador se o e-mail for exatamente admin@admin.com
+    if (user && user.email === "admin@admin.com") {
         document.body.classList.add('admin-logged');
+        updateMenuToggleButton(true); // Engrenagem para Admin
     } else {
         document.body.classList.remove('admin-logged');
-        // Fecha as telas administrativas caso deslogue abruptamente
+        updateMenuToggleButton(false); // Seta para Usuário Comum
+        
+        // Proteção: Fecha telas administrativas caso um usuário comum tente logar
         document.getElementById('product-modal').classList.add('hidden');
         document.getElementById('dashboard-modal').classList.add('hidden');
     }
@@ -70,7 +102,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 // ========================================================
-// SISTEMA DE ENVIO E LOADING DA CONTA (UX SOLICITADA)
+// SISTEMA DE ENVIO E LOADING DA CONTA
 // ========================================================
 
 function loginAdmin() {
@@ -83,19 +115,22 @@ function loginAdmin() {
         return;
     }
 
-    // FEEDBACK VISUAL: Ativa estado de carregamento "LOGANDO..."
+    // FEEDBACK VISUAL
     loginBtn.innerText = "LOGANDO...";
     loginBtn.disabled = true;
     
     auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
+        .then((result) => {
+            // Validação pós-login para verificar se o e-mail logado tem direito de admin
+            if(result.user.email !== "admin@admin.com") {
+                alert("Login efetuado! Você entrou como Usuário Cliente. Recursos de Admin ocultados.");
+            }
             toggleModal('login-modal');
         })
         .catch(error => {
-            alert("Falha no acesso à Área Admin: " + error.message);
+            alert("Falha no acesso: " + error.message);
         })
         .finally(() => {
-            // Retorna o botão ao estado padrão após a resposta do servidor
             loginBtn.innerText = "ENTRAR NO SISTEMA";
             loginBtn.disabled = false;
             document.getElementById('admin-email').value = '';
@@ -104,7 +139,7 @@ function loginAdmin() {
 }
 
 function logoutAdmin() {
-    if(confirm("Deseja encerrar a sessão de controle administrativo?")) {
+    if(confirm("Deseja encerrar a sessão?")) {
         auth.signOut();
     }
 }
@@ -128,15 +163,13 @@ document.getElementById('product-form').addEventListener('submit', (e) => {
     };
 
     if (prodId) {
-        // Modo Edição: Sobrescreve a chave JSON existente
         database.ref(`produtos/${prodId}`).set(payloadAnuncio)
             .then(() => {
                 alert('Anúncio atualizado no banco de dados!');
                 closeProductModal();
             })
-            .catch(err => alert('Erro na atualização do JSON: ' + err.message));
+            .catch(err => alert('Erro na atualização: ' + err.message));
     } else {
-        // Modo Cadastro: Gera um novo ID e empurra objeto JSON
         database.ref('produtos').push(payloadAnuncio)
             .then(() => {
                 alert('Anúncio adicionado com sucesso!');
@@ -146,7 +179,6 @@ document.getElementById('product-form').addEventListener('submit', (e) => {
     }
 });
 
-// Abre o formulário preenchendo os dados do item selecionado
 function openEditMode(productId) {
     const item = localProductsCache[productId];
     if (!item) return;
@@ -159,24 +191,22 @@ function openEditMode(productId) {
     document.getElementById('prod-link').value = item.link;
     document.getElementById('prod-trigger').value = item.trigger;
 
-    // Adapta o modal esteticamente para modo de Edição
     document.getElementById('modal-product-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> EDITAR ANÚNCIO SELECIONADO`;
     document.getElementById('btn-save-product').innerText = "SALVAR ALTERAÇÕES";
     
-    // Garante abertura do modal correspondente
     document.getElementById('product-modal').classList.remove('hidden');
 }
 
 function deleteProduct(productId) {
     if(confirm("Deseja remover permanentemente este anúncio da base de dados?")) {
         database.ref(`produtos/${productId}`).remove()
-            .then(() => alert("Item deletado do JSON com sucesso!"))
+            .then(() => alert("Item deletado com sucesso!"))
             .catch(error => alert("Erro ao deletar: " + error.message));
     }
 }
 
 // ========================================================
-// SINCRONIZAÇÃO EM TEMPO REAL E RENDERIZAÇÃO DAS DUAS TELAS
+// SINCRONIZAÇÃO EM TEMPO REAL E RENDERIZAÇÃO
 // ========================================================
 
 function renderProducts() {
@@ -189,7 +219,7 @@ function renderProducts() {
         tableBody.innerHTML = '';
         
         const data = snapshot.val();
-        localProductsCache = data || {}; // Atualiza o cache local
+        localProductsCache = data || {}; 
         
         const isAdmin = document.body.classList.contains('admin-logged');
         
@@ -198,7 +228,7 @@ function renderProducts() {
                 const item = data[id];
                 const badge = TriggersMap[item.trigger] || '';
                 
-                // 1. Injeção de Controles nos Cards Principais (Mosaico)
+                // Controles visuais de Admin nos Cards (Só aparecem se for admin@admin.com)
                 let cardControls = '';
                 if(isAdmin) {
                     cardControls = `
@@ -224,7 +254,7 @@ function renderProducts() {
                 `;
                 mainGrid.innerHTML += cardHTML;
 
-                // 2. Injeção de Linhas no Menu Próprio (Tabela de Gerenciamento Geral)
+                // Linhas do Menu Geral Dashboard
                 const triggerText = item.trigger !== 'none' ? item.trigger.toUpperCase() : 'NENHUM';
                 const rowHTML = `
                     <tr>
@@ -248,7 +278,7 @@ function renderProducts() {
 }
 
 // ========================================================
-// ENGENHARIA DE IMPORTAÇÃO E EXPORTAÇÃO EM JSON
+// IMPORTAÇÃO E EXPORTAÇÃO EM JSON
 // ========================================================
 
 function exportDataJSON() {
@@ -257,7 +287,6 @@ function exportDataJSON() {
         return;
     }
     
-    // Converte os dados salvos em string estruturada JSON
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localProductsCache, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
@@ -277,15 +306,14 @@ function importDataJSON(event) {
             const importedData = JSON.parse(e.target.result);
             
             if (confirm("Isto irá mesclar os itens importados com seu banco de dados atual. Confirmar?")) {
-                // Percorre o arquivo JSON importado e executa uploads em lote para o nó 'produtos'
                 Object.keys(importedData).forEach(key => {
                     database.ref('produtos').push(importedData[key]);
                 });
-                alert("Importação de dados JSON concluída com sucesso!");
-                document.getElementById('import-file').value = ''; // Reseta input
+                alert("Importação de dados JSON concluída!");
+                document.getElementById('import-file').value = '';
             }
         } catch (err) {
-            alert("Erro crítico: Arquivo JSON inválido ou corrompido. " + err.message);
+            alert("Erro: Arquivo JSON inválido. " + err.message);
         }
     };
     reader.readAsText(file);
