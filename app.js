@@ -9,7 +9,7 @@ const firebaseConfig = {
     storageBucket: "kits-opl.firebasestorage.app",
     messagingSenderId: "493713565781",
     appId: "1:493713565781:web:f40dc124537e344bc80cdc"
-}; 
+};
 
 // Inicialização estável do Firebase
 if (!firebase.apps.length) {
@@ -121,7 +121,6 @@ function loginAdmin() {
     
     auth.signInWithEmailAndPassword(email, password)
         .then((result) => {
-            // Validação pós-login para verificar se o e-mail logado tem direito de admin
             if(result.user.email !== "admin@admin.com") {
                 alert("Login efetuado! Você entrou como Usuário Cliente. Recursos de Admin ocultados.");
             }
@@ -165,7 +164,7 @@ document.getElementById('product-form').addEventListener('submit', (e) => {
     if (prodId) {
         database.ref(`produtos/${prodId}`).set(payloadAnuncio)
             .then(() => {
-                alert('Anúncio atualizado no banco de dados!');
+                alert('Anúncio updated no banco de dados!');
                 closeProductModal();
             })
             .catch(err => alert('Erro na atualização: ' + err.message));
@@ -228,7 +227,6 @@ function renderProducts() {
                 const item = data[id];
                 const badge = TriggersMap[item.trigger] || '';
                 
-                // Controles visuais de Admin nos Cards (Só aparecem se for admin@admin.com)
                 let cardControls = '';
                 if(isAdmin) {
                     cardControls = `
@@ -270,6 +268,17 @@ function renderProducts() {
                 `;
                 tableBody.innerHTML += rowHTML;
             });
+
+            // ========================================================
+            // ADOÇÃO NOVA: BLOQUEIO DE BOTÃO DIREITO APENAS NOS CARDS
+            // ========================================================
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                card.addEventListener('contextmenu', function(event) {
+                    event.preventDefault(); // Cancela a abertura do menu de inspeção nativo
+                });
+            });
+
         } else {
             mainGrid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#555;">Nenhum anúncio carregado.</p>`;
             tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#555;">Nenhum registro para exibir.</td></tr>`;
