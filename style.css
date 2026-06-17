@@ -47,7 +47,7 @@ body {
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
 }
 
 .nav-links a {
@@ -90,7 +90,7 @@ body {
     box-shadow: 0 0 10px var(--neon-red);
 }
 
-/* CONTROLE DE EXIBIÇÃO DE ADMIN (O SEGREDO DA USABILIDADE) */
+/* CONTROLE DE EXIBIÇÃO DE ADMIN */
 .admin-only { display: none !important; }
 body.admin-logged .admin-only { display: block !important; }
 body.admin-logged #btn-open-login { display: none !important; }
@@ -115,7 +115,7 @@ body.admin-logged #btn-open-login { display: none !important; }
     gap: 30px;
 }
 
-/* ANIMAÇÃO SURPREENDENTE NOS CARDS (EFEITO 3D HOVER) */
+/* ANIMAÇÃO 3D HOVER NOS CARDS */
 .product-card {
     background: var(--card-bg);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -197,24 +197,30 @@ body.admin-logged #btn-open-login { display: none !important; }
     box-shadow: 0 0 15px var(--neon-cyan);
 }
 
-/* BOTÃO DE DELETAR ITEM (APARECE SÓ SE FOR ADMIN) */
-.delete-prod-btn {
+/* BOTÕES DO MÓDULO RÁPIDO ADMIN NOS CARDS */
+.admin-card-controls {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(255, 0, 85, 0.8);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+.card-action-btn {
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 6px 10px;
+    padding: 8px 10px;
     cursor: pointer;
-    z-index: 10;
     font-weight: bold;
     transition: 0.2s;
 }
-.delete-prod-btn:hover { background: var(--neon-red); transform: scale(1.1); }
+.card-action-btn.edit { background: rgba(102, 252, 241, 0.8); color: black; }
+.card-action-btn.edit:hover { background: var(--neon-cyan); transform: scale(1.1); }
+.card-action-btn.delete { background: rgba(255, 0, 85, 0.8); }
+.card-action-btn.delete:hover { background: var(--neon-red); transform: scale(1.1); }
 
-/* SISTEMA DE MODAIS (ESTILO ÁREA DO JOGADOR) */
+/* MODAIS INTEGRAIS */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -232,6 +238,8 @@ body.admin-logged #btn-open-login { display: none !important; }
     border-radius: 8px; position: relative;
 }
 .modal-card.wide { max-width: 550px; }
+.modal-card.extra-wide { max-width: 850px; width: 95%; }
+
 .close-modal {
     position: absolute; top: 15px; right: 20px;
     background: transparent; border: none; color: white;
@@ -253,9 +261,46 @@ body.admin-logged #btn-open-login { display: none !important; }
 }
 .cyber-btn.success { background: var(--neon-green); color: black; }
 .cyber-btn.neon { background: var(--neon-cyan); color: black; }
-.cyber-btn:hover { filter: brightness(1.2); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+.cyber-btn:hover { filter: brightness(1.2); }
+.cyber-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; }
 
-/* WHATSAPP FLUTUANTE */
+/* SEÇÃO DO MENU / DASHBOARD DE ANÚNCIOS */
+.dashboard-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.action-btn {
+    padding: 10px 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+.action-btn.export { background: transparent; border-color: var(--neon-green); color: var(--neon-green); }
+.action-btn.export:hover { background: var(--neon-green); color: black; }
+.action-btn.import { background: transparent; border-color: var(--neon-cyan); color: var(--neon-cyan); display: inline-block; }
+.action-btn.import:hover { background: var(--neon-cyan); color: black; }
+
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #3b4654;
+}
+.cyber-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 16px;
+}
+.cyber-table th, .cyber-table td { padding: 12px; border-bottom: 1px solid #3b4654; }
+.cyber-table th { background: var(--bg-color); font-family: 'Orbitron', sans-serif; color: var(--neon-cyan); }
+.cyber-table td img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+
+/* BOTÃO FLUTUANTE DO WHATSAPP */
 .whatsapp-float {
     position: fixed; bottom: 30px; right: 30px;
     background-color: #25d366; color: #fff; border-radius: 50px;
