@@ -63,6 +63,23 @@ body {
     text-shadow: 0 0 8px var(--neon-cyan);
 }
 
+/* BOTÃO DO MENU RESPONSIVO (OCULTO NO DESKTOP) */
+.menu-toggle-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-size: 20px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+.menu-toggle-btn:hover {
+    box-shadow: 0 0 10px var(--neon-cyan);
+    background: rgba(102, 252, 241, 0.1);
+}
+
 /* BOTÕES DO CABEÇALHO */
 .nav-admin-btn, .nav-logout-btn {
     background: transparent;
@@ -311,3 +328,58 @@ body.admin-logged #btn-open-login { display: none !important; }
 .whatsapp-float:hover { transform: scale(1.1); box-shadow: 0px 0px 20px #25d366; }
 
 .hidden { display: none !important; }
+
+/* ========================================================
+   MEDIA QUERY: MODELO RESPONSIVO PARA CELULARES
+   ======================================================== */
+@media (max-width: 768px) {
+    .menu-toggle-btn {
+        display: block; /* Ativa o botão no celular */
+    }
+
+    .nav-links {
+        display: none; /* Esconde os links por padrão */
+        flex-direction: column;
+        position: absolute;
+        top: 75px;
+        left: 0;
+        width: 100%;
+        background: rgba(11, 12, 16, 0.98);
+        border-bottom: 2px solid var(--neon-cyan);
+        padding: 20px;
+        box-sizing: border-box;
+        gap: 20px;
+        align-items: stretch;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+    }
+
+    /* Quando a classe active for injetada via JS, o menu expande */
+    .nav-links.active {
+        display: flex !important;
+    }
+
+    .nav-links a {
+        text-align: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .nav-admin-btn, .nav-logout-btn {
+        width: 100%;
+        text-align: center;
+        padding: 12px 0;
+    }
+
+    .hero-banner h1 {
+        font-size: 32px;
+    }
+    
+    .modal-card {
+        padding: 20px;
+    }
+    
+    .cyber-table th:nth-child(1), .cyber-table td:nth-child(1),
+    .cyber-table th:nth-child(4), .cyber-table td:nth-child(4) {
+        display: none; /* Oculta imagem e gatilho na tabela móvel para caber na tela */
+    }
+}
