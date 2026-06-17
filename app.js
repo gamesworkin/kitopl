@@ -1,6 +1,6 @@
 // app.js
 
-// CONFIGURAÇÃO DO SEU FIREBASE (Substitua pelos dados gerados no seu painel Firebase)
+// CONFIGURAÇÃO DO SEU FIREBASE (Substitua com suas credenciais oficiais do Firebase Console)
 const firebaseConfig = {
     apiKey: "AIzaSyD5VJ5pdgBXRD3ODIsbhO9jJcOZ2MnR-3E",
     authDomain: "kits-opl.firebaseapp.com",
@@ -11,78 +11,114 @@ const firebaseConfig = {
     appId: "1:493713565781:web:f40dc124537e344bc80cdc"
 };
 
-// Inicialização segura do Firebase
+// Inicialização estável do Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
 const auth = firebase.auth();
 
-// Controle dos gatilhos de Marketing / Escassez
+// Banco de Ícones e Texto de Gatilhos
 const TriggersMap = {
     urgency: `<span class="marketing-badge"><i class="fa-solid fa-fire-flame-curved"></i> Últimas Unidades!</span>`,
     countdown: `<span class="marketing-badge"><i class="fa-solid fa-hourglass-half"></i> Expira em breve!</span>`,
     exclusive: `<span class="marketing-badge"><i class="fa-solid fa-gem"></i> Recomendado pela Comunidade</span>`
 };
 
+// Cache local de produtos estruturados em JSON
+let localProductsCache = {};
+
 // ========================================================
-// CONTROLE DE INTERFACE (MODAIS E ESTADOS)
+// CAPTURA AUTOMÁTICA DO ENTER PARA LOGIN
+// ========================================================
+document.getElementById('login-modal').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Impede envios colaterais
+        loginAdmin();
+    }
+});
+
+// ========================================================
+// COMPORTAMENTO INTERFACE MÓDULOS & MODAIS
 // ========================================================
 
-// Abre e fecha os modais da página única
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if(modal) modal.classList.toggle('hidden');
 }
 
-// Event Listeners dos botões de abrir os modais
-document.getElementById('btn-open-login').addEventListener('click', () => toggleModal('login-modal'));
-document.getElementById('btn-open-panel').addEventListener('click', () => toggleModal('product-modal'));
+function closeProductModal() {
+    toggleModal('product-modal');
+    // Reseta o estado interno do formulário após fechar
+    document.getElementById('product-form').reset();
+    document.getElementById('prod-id').value = '';
+    document.getElementById('modal-product-title').innerHTML = `<i class="fa-solid fa-square-plus"></i> CADASTRAR NOVO ANÚNCIO`;
+    document.getElementById('btn-save-product').innerText = "PUBLICAR ANÚNCIO";
+}
 
-// Escuta o status do login no Firebase e atualiza o DOM instantaneamente
+// Escuta a autenticação e reestrutura o DOM
 auth.onAuthStateChanged((user) => {
     if (user) {
         document.body.classList.add('admin-logged');
     } else {
         document.body.classList.remove('admin-logged');
+        // Fecha as telas administrativas caso deslogue abruptamente
+        document.getElementById('product-modal').classList.add('hidden');
+        document.getElementById('dashboard-modal').classList.add('hidden');
     }
-    // Re-renderiza os produtos para injetar/remover botões administrativos (Deletar)
     renderProducts();
 });
 
 // ========================================================
-// REQUISIÇÕES E LOGIN FIREBASE AUTH
+// SISTEMA DE ENVIO E LOADING DA CONTA (UX SOLICITADA)
 // ========================================================
 
 function loginAdmin() {
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-password').value;
+    const loginBtn = document.getElementById('btn-submit-login');
+    
+    if(!email || !password) {
+        alert("Preencha todos os campos do terminal de acesso!");
+        return;
+    }
+
+    // FEEDBACK VISUAL: Ativa estado de carregamento "LOGANDO..."
+    loginBtn.innerText = "LOGANDO...";
+    loginBtn.disabled = true;
     
     auth.signInWithEmailAndPassword(email, password)
         .then(() => {
             toggleModal('login-modal');
-            // Limpa os campos após login correto
+        })
+        .catch(error => {
+            alert("Falha no acesso à Área Admin: " + error.message);
+        })
+        .finally(() => {
+            // Retorna o botão ao estado padrão após a resposta do servidor
+            loginBtn.innerText = "ENTRAR NO SISTEMA";
+            loginBtn.disabled = false;
             document.getElementById('admin-email').value = '';
             document.getElementById('admin-password').value = '';
-        })
-        .catch(error => alert("Falha na autenticação gamer: " + error.message));
+        });
 }
 
 function logoutAdmin() {
-    if(confirm("Deseja mesmo sair do Painel de Controle?")) {
+    if(confirm("Deseja encerrar a sessão de controle administrativo?")) {
         auth.signOut();
     }
 }
 
 // ========================================================
-// GERENCIAMENTO DOS PRODUTOS (REALTIME DATABASE)
+// SALVAMENTO / EDIÇÃO NO REALTIME DATABASE (JSON)
 // ========================================================
 
-// Salvar Item via JSON push
 document.getElementById('product-form').addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const novoAnuncio = {
+    const prodId = document.getElementById('prod-id').value;
+    
+    const payloadAnuncio = {
         title: document.getElementById('prod-title').value,
         image: document.getElementById('prod-img').value,
         description: document.getElementById('prod-desc').value,
@@ -91,45 +127,91 @@ document.getElementById('product-form').addEventListener('submit', (e) => {
         trigger: document.getElementById('prod-trigger').value
     };
 
-    database.ref('produtos').push(novoAnuncio)
-        .then(() => {
-            alert('Anúncio cadastrado e sincronizado com sucesso!');
-            document.getElementById('product-form').reset();
-            toggleModal('product-modal'); // Fecha o formulário
-        })
-        .catch(error => alert('Erro crítico ao salvar dados: ' + error.message));
+    if (prodId) {
+        // Modo Edição: Sobrescreve a chave JSON existente
+        database.ref(`produtos/${prodId}`).set(payloadAnuncio)
+            .then(() => {
+                alert('Anúncio atualizado no banco de dados!');
+                closeProductModal();
+            })
+            .catch(err => alert('Erro na atualização do JSON: ' + err.message));
+    } else {
+        // Modo Cadastro: Gera um novo ID e empurra objeto JSON
+        database.ref('produtos').push(payloadAnuncio)
+            .then(() => {
+                alert('Anúncio adicionado com sucesso!');
+                closeProductModal();
+            })
+            .catch(err => alert('Erro ao salvar no banco: ' + err.message));
+    }
 });
 
-// Função para deletar um anúncio diretamente do layout (Só funciona se logado)
+// Abre o formulário preenchendo os dados do item selecionado
+function openEditMode(productId) {
+    const item = localProductsCache[productId];
+    if (!item) return;
+
+    document.getElementById('prod-id').value = productId;
+    document.getElementById('prod-title').value = item.title;
+    document.getElementById('prod-img').value = item.image;
+    document.getElementById('prod-desc').value = item.description;
+    document.getElementById('prod-price').value = item.price;
+    document.getElementById('prod-link').value = item.link;
+    document.getElementById('prod-trigger').value = item.trigger;
+
+    // Adapta o modal esteticamente para modo de Edição
+    document.getElementById('modal-product-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> EDITAR ANÚNCIO SELECIONADO`;
+    document.getElementById('btn-save-product').innerText = "SALVAR ALTERAÇÕES";
+    
+    // Garante abertura do modal correspondente
+    document.getElementById('product-modal').classList.remove('hidden');
+}
+
 function deleteProduct(productId) {
-    if(confirm("Tem certeza que quer remover permanentemente este anúncio do banco?")) {
+    if(confirm("Deseja remover permanentemente este anúncio da base de dados?")) {
         database.ref(`produtos/${productId}`).remove()
-            .then(() => alert("Item excluído!"))
-            .catch(error => alert("Erro ao excluir: " + error.message));
+            .then(() => alert("Item deletado do JSON com sucesso!"))
+            .catch(error => alert("Erro ao deletar: " + error.message));
     }
 }
 
-// Carregar e listar os anúncios em tempo real
+// ========================================================
+// SINCRONIZAÇÃO EM TEMPO REAL E RENDERIZAÇÃO DAS DUAS TELAS
+// ========================================================
+
 function renderProducts() {
-    const grid = document.getElementById('products-grid');
+    const mainGrid = document.getElementById('products-grid');
+    const tableBody = document.getElementById('admin-table-body');
     
-    database.ref('produtos').off(); // Evita duplicação de escuta
+    database.ref('produtos').off();
     database.ref('produtos').on('value', (snapshot) => {
-        grid.innerHTML = '';
-        const items = snapshot.val();
+        mainGrid.innerHTML = '';
+        tableBody.innerHTML = '';
+        
+        const data = snapshot.val();
+        localProductsCache = data || {}; // Atualiza o cache local
+        
         const isAdmin = document.body.classList.contains('admin-logged');
         
-        if (items) {
-            Object.keys(items).forEach((id) => {
-                const item = items[id];
+        if (data) {
+            Object.keys(data).forEach((id) => {
+                const item = data[id];
                 const badge = TriggersMap[item.trigger] || '';
                 
-                // Botão de deletar renderizado condicionalmente
-                const deleteBtn = isAdmin ? `<button class="delete-prod-btn" onclick="deleteProduct('${id}')"><i class="fa-solid fa-trash"></i></button>` : '';
+                // 1. Injeção de Controles nos Cards Principais (Mosaico)
+                let cardControls = '';
+                if(isAdmin) {
+                    cardControls = `
+                        <div class="admin-card-controls">
+                            <button class="card-action-btn edit" onclick="openEditMode('${id}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button class="card-action-btn delete" onclick="deleteProduct('${id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `;
+                }
 
                 const cardHTML = `
                     <div class="product-card">
-                        ${deleteBtn}
+                        ${cardControls}
                         <img src="${item.image}" alt="${item.title}" loading="lazy">
                         <div class="product-info">
                             ${badge}
@@ -140,10 +222,71 @@ function renderProducts() {
                         </div>
                     </div>
                 `;
-                grid.innerHTML += cardHTML;
+                mainGrid.innerHTML += cardHTML;
+
+                // 2. Injeção de Linhas no Menu Próprio (Tabela de Gerenciamento Geral)
+                const triggerText = item.trigger !== 'none' ? item.trigger.toUpperCase() : 'NENHUM';
+                const rowHTML = `
+                    <tr>
+                        <td><img src="${item.image}"></td>
+                        <td><strong>${item.title}</strong></td>
+                        <td style="color:#00ff66;">R$ ${parseFloat(item.price).toFixed(2)}</td>
+                        <td><span style="font-size:12px; color:#ff0055;">${triggerText}</span></td>
+                        <td>
+                            <button class="card-action-btn edit" onclick="toggleModal('dashboard-modal'); openEditMode('${id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="card-action-btn delete" onclick="deleteProduct('${id}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += rowHTML;
             });
         } else {
-            grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #666;">Nenhum anúncio disponível no setup.</p>`;
+            mainGrid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#555;">Nenhum anúncio carregado.</p>`;
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#555;">Nenhum registro para exibir.</td></tr>`;
         }
     });
+}
+
+// ========================================================
+// ENGENHARIA DE IMPORTAÇÃO E EXPORTAÇÃO EM JSON
+// ========================================================
+
+function exportDataJSON() {
+    if (Object.keys(localProductsCache).length === 0) {
+        alert("Não existem anúncios cadastrados para exportação.");
+        return;
+    }
+    
+    // Converte os dados salvos em string estruturada JSON
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localProductsCache, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "backup_anuncios_gamer.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
+
+function importDataJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (confirm("Isto irá mesclar os itens importados com seu banco de dados atual. Confirmar?")) {
+                // Percorre o arquivo JSON importado e executa uploads em lote para o nó 'produtos'
+                Object.keys(importedData).forEach(key => {
+                    database.ref('produtos').push(importedData[key]);
+                });
+                alert("Importação de dados JSON concluída com sucesso!");
+                document.getElementById('import-file').value = ''; // Reseta input
+            }
+        } catch (err) {
+            alert("Erro crítico: Arquivo JSON inválido ou corrompido. " + err.message);
+        }
+    };
+    reader.readAsText(file);
 }
