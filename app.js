@@ -9,7 +9,7 @@ const firebaseConfig = {
     storageBucket: "kits-opl.firebasestorage.app",
     messagingSenderId: "493713565781",
     appId: "1:493713565781:web:f40dc124537e344bc80cdc"
-};
+}; 
 
 // Inicialização estável do Firebase
 if (!firebase.apps.length) {
