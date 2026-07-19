@@ -3,12 +3,12 @@
 // CONFIGURAÇÃO DO SEU FIREBASE (Substitua com suas credenciais oficiais do Firebase Console)
 const firebaseConfig = {
     apiKey: "AIzaSyD5VJ5pdgBXRD3ODIsbhO9jJcOZ2MnR-3E",
-    authDomain: "kits-opl.firebaseapp.com",
-    databaseURL: "https://kits-opl-default-rtdb.firebaseio.com",
-    projectId: "kits-opl",
-    storageBucket: "kits-opl.firebasestorage.app",
-    messagingSenderId: "493713565781",
-    appId: "1:493713565781:web:f40dc124537e344bc80cdc"
+  authDomain: "kits-opl.firebaseapp.com",
+  databaseURL: "https://kits-opl-default-rtdb.firebaseio.com",
+  projectId: "kits-opl",
+  storageBucket: "kits-opl.firebasestorage.app",
+  messagingSenderId: "493713565781",
+  appId: "1:493713565781:web:f40dc124537e344bc80cdc"
 };
 
 // Inicialização estável do Firebase
